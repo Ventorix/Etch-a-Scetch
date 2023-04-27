@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 
   <head>
     <meta charset="UTF-8">
@@ -9,7 +9,7 @@
     <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
     <link rel="icon" href="img/favicon.png" type="image/png">
 
-    <title>Webpack</title>
+    <title>Etch a Scetch</title>
   </head>
 
   <body>
@@ -17,11 +17,18 @@
       <h1>Etch a Scetch</h1>
       <div class="input-block">
         <input type="" placeholder="Print number from 1 to 64" class="cell-number">
-        <button class="create-btn">Create cells</button>
+        <button class="create-btn">Change size</button>
       </div>
     </header>
 
     <main class="playground">
+      <div class="options">
+        <input type="color" value="000000" class="color-input">
+        <button class="color-tool active">Color Tool</button>
+        <button class="rainbow-tool">Rainbow Tool</button>
+        <button class="eraser-tool">Eraser Tool</button>
+        <button class="clear-button">Clear Grid</button>
+      </div>
       <div class="grid-container">
       </div>
     </main>

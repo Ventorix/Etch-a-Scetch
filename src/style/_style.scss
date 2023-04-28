@@ -14,11 +14,11 @@ body {
 }
 
 header {
-  padding: 35px;
-
   h1 {
     text-align: center;
   }
+}
+.result {
 }
 
 .playground {
@@ -46,7 +46,7 @@ header {
   flex-direction: column;
   width: 10%;
   margin-left: auto;
-  margin-right: 590px;
+  margin-right: auto;
   margin-top: 50px;
 }
 
@@ -180,4 +180,8 @@ button {
   to {
     fill: $white;
   }
+}
+
+canvas {
+  display: none;
 }

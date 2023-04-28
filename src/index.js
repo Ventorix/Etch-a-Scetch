@@ -1,5 +1,6 @@
 import './index.html';
 import './index.scss';
+import html2canvas from 'html2canvas';
 
 const gridContainer = document.querySelector('.grid-container');
 const sizeSlider = document.querySelector('.range-slider');
@@ -11,6 +12,7 @@ const eraserTool = document.querySelector('.eraser-tool');
 const clearButton = document.querySelector('.clear-button');
 const checkButton = document.querySelector('.check-button');
 const progressBar = document.querySelector('.progress-bar');
+const gridSave = document.querySelector('.save-button');
 
 let activeColor = colorInput.value;
 let isColorActive = true;
@@ -155,6 +157,21 @@ function changeSize(e) {
   }
   gridElems.forEach((elem) => elem.addEventListener('pointerdown', pointerDownHandler));
 }
+function makeScreenshot() {
+  html2canvas(gridContainer).then(function (canvas) {
+    gridContainer.appendChild(canvas);
+  });
+  setTimeout(() => {
+    let grid = document.querySelector('canvas');
+    saveParams(grid);
+  }, 700);
+}
+
+function saveParams(grid) {
+  let png = 'png';
+  let filename = 'test';
+  saveGrid(grid, png, filename);
+}
 
 sizeSlider.addEventListener('mousemove', updateSizeValue);
 sizeSlider.addEventListener('change', changeSize);
@@ -164,3 +181,43 @@ eraserTool.addEventListener('click', setActiveTool);
 clearButton.addEventListener('click', clearElementsColor);
 colorInput.addEventListener('change', () => (activeColor = colorInput.value));
 checkButton.addEventListener('click', checkBorderState);
+gridSave.addEventListener('click', makeScreenshot);
+
+function saveGrid(grid, format, filename) {
+  try {
+    console.log(typeof grid);
+    console.dir(grid);
+    // Check if the format is supported
+    const supportedFormats = ['png', 'jpg', 'pdf', 'txt'];
+    if (!supportedFormats.includes(format)) {
+      throw new Error(`Unsupported format: ${format}`);
+    }
+    // Save the grid as an image or a file
+    if (format === 'png' || format === 'jpg' || format === 'pdf') {
+      // Save as an image
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = grid.width;
+      canvas.height = grid.height;
+      console.log(grid, format, filename);
+      ctx.drawImage(grid, 0, 0);
+      const dataURL = canvas.toDataURL(`image/${format}`);
+      const link = document.createElement('a');
+      link.download = `${filename}.${format}`;
+      link.href = dataURL;
+      link.click();
+      gridContainer.removeChild(gridContainer.lastChild);
+    } else if (format === 'txt') {
+      // Save as a text file
+      const link = document.createElement('a');
+      link.download = `${filename}.${format}`;
+      link.href = `data:text/plain;charset=utf-8,${encodeURIComponent(grid.textContent)}`;
+      link.click();
+    }
+
+    return true;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+}

@@ -2,13 +2,16 @@ import './index.html';
 import './index.scss';
 
 const gridContainer = document.querySelector('.grid-container');
-const gridInput = document.querySelector('.cell-number');
-const gridButton = document.querySelector('.create-btn');
+const sizeSlider = document.querySelector('.range-slider');
+const sizeValue = document.querySelector('.size-value');
 const colorInput = document.querySelector('.color-input');
 const colorTool = document.querySelector('.color-tool');
 const rainbowTool = document.querySelector('.rainbow-tool');
 const eraserTool = document.querySelector('.eraser-tool');
 const clearButton = document.querySelector('.clear-button');
+const checkButton = document.querySelector('.check-button');
+const progressBar = document.querySelector('.progress-bar');
+
 let activeColor = colorInput.value;
 let isColorActive = true;
 let isRainbowActive = false;
@@ -69,25 +72,6 @@ window.addEventListener('load', () => {
   gridElems.forEach((elem) => elem.addEventListener('pointerdown', pointerDownHandler));
 });
 
-function createGridElements() {
-  let numOfCells = +gridInput.value;
-
-  if (typeof numOfCells === 'number' && !isNaN(numOfCells) && numOfCells > 0 && numOfCells <= 64) {
-    clearElements();
-    gridContainer.style.gridTemplateColumns = `repeat(${numOfCells}, 1fr)`;
-    gridContainer.style.gridTemplateRows = `repeat(${numOfCells}, 1fr)`;
-
-    for (let i = 0; i < numOfCells ** 2; i++) {
-      let elem = document.createElement('div');
-      elem.className = 'grid-elem';
-      gridContainer.append(elem);
-    }
-
-    gridElems = document.querySelectorAll('.grid-elem');
-    gridElems.forEach((elem) => elem.addEventListener('pointerdown', pointerDownHandler));
-  }
-}
-
 function pointerDownHandler(e) {
   if (isColorActive) {
     e.target.style.backgroundColor = activeColor;
@@ -120,9 +104,8 @@ function pointerUpHandler() {
 }
 
 function clearElements() {
-  gridElems = document.querySelectorAll('.grid-elem');
-  for (let elem of gridElems) {
-    elem.remove();
+  while (gridContainer.firstChild) {
+    gridContainer.removeChild(gridContainer.firstChild);
   }
 }
 
@@ -133,9 +116,51 @@ function clearElementsColor() {
   }
 }
 
-gridButton.addEventListener('click', createGridElements);
+function checkBorderState() {
+  gridElems = document.querySelectorAll('.grid-elem');
+  if (checkButton.classList.contains('active')) {
+    checkButton.classList.remove('active');
+    for (let elem of gridElems) {
+      elem.style.border = '1px rgb(156, 156, 156) solid';
+    }
+  } else {
+    checkButton.classList.add('active');
+    for (let elem of gridElems) {
+      elem.style.border = `none`;
+    }
+  }
+}
+
+function updateSizeValue(e) {
+  progressBar.style.width = `${(e.target.value / 64) * 100}%`;
+  sizeValue.innerHTML = `${e.target.value} x ${e.target.value}`;
+}
+
+function changeSize(e) {
+  console.log(e.target.value);
+  clearElements();
+  gridContainer.style.gridTemplateColumns = `repeat(${e.target.value}, 1fr)`;
+  gridContainer.style.gridTemplateRows = `repeat(${e.target.value}, 1fr)`;
+
+  for (let i = 0; i < e.target.value ** 2; i++) {
+    let elem = document.createElement('div');
+    elem.className = 'grid-elem';
+    gridContainer.append(elem);
+  }
+  gridElems = document.querySelectorAll('.grid-elem');
+  if (checkButton.classList.contains('active')) {
+    for (let elem of gridElems) {
+      elem.style.border = `none`;
+    }
+  }
+  gridElems.forEach((elem) => elem.addEventListener('pointerdown', pointerDownHandler));
+}
+
+sizeSlider.addEventListener('mousemove', updateSizeValue);
+sizeSlider.addEventListener('change', changeSize);
 colorTool.addEventListener('click', setActiveTool);
 rainbowTool.addEventListener('click', setActiveTool);
 eraserTool.addEventListener('click', setActiveTool);
 clearButton.addEventListener('click', clearElementsColor);
 colorInput.addEventListener('change', () => (activeColor = colorInput.value));
+checkButton.addEventListener('click', checkBorderState);

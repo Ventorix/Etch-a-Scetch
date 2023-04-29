@@ -32,8 +32,23 @@
         <button class="check-button">Hide Grid Lines</button>
         <button class="save-button">Save Grid</button>
       </div>
-      <div class="grid-container">
+      <div class="grid-container"></div>
+      <div class="modal">
+        <div class="modal-wrapper">
+          <div class="modal-description">Choose image options</div>
+          <div class="modal-block">
+            <input type="text" placeholder="Type a file name" class="modal-block__name"></input>
+            <select class="modal-block__format">
+              <option value="png">png</option>
+              <option value="jpg">jpg</option>
+            </select>
+          </div>
+          <button type="button" class="modal-button">
+            Download
+          </button>
+        </div>
       </div>
+      <div class="overlay"></div>
     </main>
 
     <footer class="footer">

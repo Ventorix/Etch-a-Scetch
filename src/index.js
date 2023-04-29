@@ -13,6 +13,11 @@ const clearButton = document.querySelector('.clear-button');
 const checkButton = document.querySelector('.check-button');
 const progressBar = document.querySelector('.progress-bar');
 const gridSave = document.querySelector('.save-button');
+const saveModal = document.querySelector('.modal');
+const overlay = document.querySelector('.overlay');
+const saveFormat = document.querySelector('.modal-block__format');
+const fileName = document.querySelector('.modal-block__name');
+const downloadButton = document.querySelector('.modal-button');
 
 let activeColor = colorInput.value;
 let isColorActive = true;
@@ -21,6 +26,7 @@ let isEraserActive = false;
 let activeTool = colorTool;
 let rainbowColor;
 let gridElems;
+let savedImg;
 
 function setActiveTool(e) {
   if (e.target.classList.contains('active')) return;
@@ -159,20 +165,53 @@ function changeSize(e) {
   gridElems.forEach((elem) => elem.addEventListener('pointerdown', pointerDownHandler));
 }
 
+// Save modal
+const showModal = () => {
+  saveModal.classList.add('opened');
+  overlay.classList.add('opened');
+};
+
+const hideModal = () => {
+  saveModal.classList.remove('opened');
+  overlay.classList.remove('opened');
+  saveFormat.value = 'png';
+  fileName.value = '';
+  gridContainer.removeChild(gridContainer.lastChild);
+};
+
+function selectFormat() {
+  let format = saveFormat.value;
+  return format;
+}
+
+function selectFileName() {
+  let filename = fileName.value;
+  return filename;
+}
+
 function makeScreenshot() {
   html2canvas(gridContainer).then(function (canvas) {
     gridContainer.appendChild(canvas);
   });
   setTimeout(() => {
-    let grid = document.querySelector('canvas');
-    saveParams(grid);
-  }, 700);
+    savedImg = document.querySelector('canvas');
+    return savedImg;
+  }, 100);
 }
 
-function saveParams(grid) {
-  let png = 'png';
-  let filename = 'test';
-  saveGrid(grid, png, filename);
+function checkParameters() {
+  let format = selectFormat();
+  let filename = selectFileName();
+  let img = savedImg;
+
+  try {
+    if (filename !== null || undefined || '') {
+      saveGrid(img, format, filename);
+    }
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
 }
 
 sizeSlider.addEventListener('mousemove', updateSizeValue);
@@ -183,38 +222,35 @@ eraserTool.addEventListener('click', setActiveTool);
 clearButton.addEventListener('click', clearElementsColor);
 colorInput.addEventListener('change', () => (activeColor = colorInput.value));
 checkButton.addEventListener('click', checkBorderState);
+gridSave.addEventListener('click', showModal);
 gridSave.addEventListener('click', makeScreenshot);
+saveFormat.addEventListener('change', selectFormat);
+fileName.addEventListener('change', selectFileName);
+downloadButton.addEventListener('click', checkParameters);
+overlay.addEventListener('click', hideModal);
 
-function saveGrid(grid, format, filename) {
+function saveGrid(img, format, filename) {
   try {
-    console.log(typeof grid);
-    console.dir(grid);
     // Check if the format is supported
-    const supportedFormats = ['png', 'jpg', 'pdf', 'txt'];
+    const supportedFormats = ['png', 'jpg'];
     if (!supportedFormats.includes(format)) {
       throw new Error(`Unsupported format: ${format}`);
     }
     // Save the grid as an image or a file
-    if (format === 'png' || format === 'jpg' || format === 'pdf') {
+    if (format === 'png' || format === 'jpg') {
       // Save as an image
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-      canvas.width = grid.width;
-      canvas.height = grid.height;
-      console.log(grid, format, filename);
-      ctx.drawImage(grid, 0, 0);
+      canvas.width = img.width;
+      canvas.height = img.height;
+      console.log(img, format, filename);
+      ctx.drawImage(img, 0, 0);
       const dataURL = canvas.toDataURL(`image/${format}`);
       const link = document.createElement('a');
       link.download = `${filename}.${format}`;
       link.href = dataURL;
       link.click();
-      gridContainer.removeChild(gridContainer.lastChild);
-    } else if (format === 'txt') {
-      // Save as a text file
-      const link = document.createElement('a');
-      link.download = `${filename}.${format}`;
-      link.href = `data:text/plain;charset=utf-8,${encodeURIComponent(grid.textContent)}`;
-      link.click();
+      hideModal();
     }
 
     return true;

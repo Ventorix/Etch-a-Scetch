@@ -186,7 +186,11 @@ function selectFormat() {
 
 function selectFileName() {
   let filename = fileName.value;
-  return filename;
+  if (stringValidation(filename)) {
+    return filename;
+  } else {
+    alert('This is an invalid filename, please try again!');
+  }
 }
 
 function makeScreenshot() {
@@ -199,13 +203,21 @@ function makeScreenshot() {
   }, 100);
 }
 
+function stringValidation(str) {
+  if (/^(con|prn|aux|nul|com[0-9]|lpt[0-9])$|([<>:"\/\\|?*])|(\.|\s)$/gi.test(str)) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 function checkParameters() {
   let format = selectFormat();
   let filename = selectFileName();
   let img = savedImg;
 
   try {
-    if (filename !== null || undefined || '') {
+    if (stringValidation(filename)) {
       saveGrid(img, format, filename);
     }
   } catch (error) {
@@ -235,6 +247,10 @@ function saveGrid(img, format, filename) {
     const supportedFormats = ['png', 'jpg'];
     if (!supportedFormats.includes(format)) {
       throw new Error(`Unsupported format: ${format}`);
+    }
+    // Check if the filename is valid
+    if (stringValidation(!filename)) {
+      throw new Error(`This is an invalid filename: ${filename}`);
     }
     // Save the grid as an image or a file
     if (format === 'png' || format === 'jpg') {

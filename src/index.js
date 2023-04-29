@@ -2,10 +2,31 @@ import './index.html';
 import './index.scss';
 import html2canvas from 'html2canvas';
 
+const DEFAULT_COLOR = 'black';
+const DEFAULT_TOOL = 'color';
+const DEFAULT_SIZE = 16;
+
+let currentColor = DEFAULT_COLOR;
+let currentTool = DEFAULT_TOOL;
+let currentSize = DEFAULT_SIZE;
+
+function setCurrentColor(newColor) {
+  currentColor = newColor;
+}
+
+function setCurrentTool(newTool) {
+  activateTool(newTool);
+  currentTool = newTool;
+}
+
+function setCurrentSize(newSize) {
+  currentSize = newSize;
+}
+
 const gridContainer = document.querySelector('.grid-container');
 const sizeSlider = document.querySelector('.range-slider');
 const sizeValue = document.querySelector('.grid-size');
-const colorInput = document.querySelector('.color-input');
+const colorPicker = document.querySelector('.color-input');
 const colorTool = document.querySelector('.color-tool');
 const rainbowTool = document.querySelector('.rainbow-tool');
 const eraserTool = document.querySelector('.eraser-tool');
@@ -19,109 +40,92 @@ const saveFormat = document.querySelector('.modal-block__format');
 const fileName = document.querySelector('.modal-block__name');
 const downloadButton = document.querySelector('.modal-button');
 
-let activeColor = colorInput.value;
-let isColorActive = true;
-let isRainbowActive = false;
-let isEraserActive = false;
-let activeTool = colorTool;
-let rainbowColor;
+colorPicker.addEventListener('input', (e) => setCurrentColor(e.target.value));
+colorTool.addEventListener('click', () => setCurrentTool('color'));
+rainbowTool.addEventListener('click', () => setCurrentTool('rainbow'));
+eraserTool.addEventListener('click', () => setCurrentTool('eraser'));
+sizeSlider.addEventListener('mousemove', (e) => updateSizeValue(e.target.value));
+sizeSlider.addEventListener('change', (e) => changeSize(e.target.value));
+clearButton.addEventListener('click', reloadGrid);
+checkButton.addEventListener('click', checkBorderState);
+gridSave.addEventListener('click', makeScreenshot);
+saveFormat.addEventListener('change', selectFormat);
+fileName.addEventListener('change', selectFileName);
+downloadButton.addEventListener('click', checkParameters);
+gridSave.addEventListener('click', showModal);
+overlay.addEventListener('click', hideModal);
+
 let gridElems;
 let savedImg;
 
-function setActiveTool(e) {
-  if (e.target.classList.contains('active')) return;
+let mouseDown = false;
+document.body.addEventListener('pointerdown', () => (mouseDown = true));
+document.body.addEventListener('pointerup', () => (mouseDown = false));
 
-  activeTool.classList.remove('active');
-  activeTool = e.target;
-  activeTool.classList.add('active');
+function activateTool(newTool) {
+  if (currentTool === 'rainbow') {
+    rainbowTool.classList.remove('active');
+  } else if (currentTool === 'color') {
+    colorTool.classList.remove('active');
+  } else if (currentTool === 'eraser') {
+    eraserTool.classList.remove('active');
+  }
 
-  if (activeTool.classList.contains('color-tool')) {
-    isColorActive = true;
-    isEraserActive = false;
-    isRainbowActive = false;
-    gridElems = document.querySelectorAll('.grid-elem');
-    gridElems.forEach((elem) => elem.removeEventListener('pointerleave', rainbowMode));
-  }
-  if (activeTool.classList.contains('eraser-tool')) {
-    isEraserActive = true;
-    isRainbowActive = false;
-    isColorActive = false;
-    gridElems = document.querySelectorAll('.grid-elem');
-    gridElems.forEach((elem) => elem.removeEventListener('pointerleave', rainbowMode));
-  }
-  if (activeTool.classList.contains('rainbow-tool')) {
-    isRainbowActive = true;
-    isColorActive = false;
-    isEraserActive = false;
-    gridElems = document.querySelectorAll('.grid-elem');
-    gridElems.forEach((elem) => elem.addEventListener('pointerleave', rainbowMode));
+  if (newTool === 'rainbow') {
+    rainbowTool.classList.add('active');
+  } else if (newTool === 'color') {
+    colorTool.classList.add('active');
+  } else if (newTool === 'eraser') {
+    eraserTool.classList.add('active');
   }
 }
 
-function rainbowMode() {
-  rainbowColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+function setupGrid(size) {
+  gridContainer.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+  gridContainer.style.gridTemplateRows = `repeat(${size}, 1fr)`;
+
+  for (let i = 0; i < size ** 2; i++) {
+    const gridElement = document.createElement('div');
+    gridElement.classList.add('grid-element');
+    gridElement.addEventListener('pointerover', changeColor);
+    gridElement.addEventListener('pointerdown', changeColor);
+    gridContainer.appendChild(gridElement);
+  }
 }
 
-window.addEventListener('load', () => {
-  gridContainer.style.gridTemplateColumns = `repeat(16, 1fr)`;
-  gridContainer.style.gridTemplateRows = `repeat(16, 1fr)`;
+function reloadGrid() {
+  clearGrid();
+  setupGrid(currentSize);
+}
 
-  for (let i = 0; i < 16 ** 2; i++) {
-    let elem = document.createElement('div');
-    elem.className = 'grid-elem';
-    gridContainer.append(elem);
-  }
+function clearGrid() {
+  gridContainer.innerHTML = '';
+}
 
-  gridElems = document.querySelectorAll('.grid-elem');
-  gridElems.forEach((elem) => elem.addEventListener('pointerdown', pointerDownHandler));
-});
+function updateSizeValue(value) {
+  sizeValue.innerHTML = `${value} x ${value}`;
+  progressBar.style.width = `${(value / 64) * 100}%`;
+}
 
-function pointerDownHandler(e) {
-  if (isColorActive) {
-    e.target.style.backgroundColor = activeColor;
-  } else if (isEraserActive) {
+function changeSize(value) {
+  setCurrentSize(value);
+  updateSizeValue(value);
+  reloadGrid();
+}
+
+function changeColor(e) {
+  if (e.type === 'pointerover' && !mouseDown) return;
+  if (currentTool === 'rainbow') {
+    e.target.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+  } else if (currentTool === 'color') {
+    e.target.style.backgroundColor = currentColor;
+  } else if (currentTool === 'eraser') {
     e.target.style.backgroundColor = 'white';
-  } else if (isRainbowActive) {
-    e.target.style.backgroundColor = rainbowColor;
-  }
-
-  gridElems.forEach((elem) => elem.addEventListener('pointermove', pointerMoveHandler));
-  gridElems.forEach((elem) => elem.addEventListener('pointerup', pointerUpHandler));
-  document.body.addEventListener('pointerup', pointerUpHandler);
-}
-
-function pointerMoveHandler(e) {
-  if (isColorActive) {
-    e.target.style.backgroundColor = activeColor;
-  } else if (isEraserActive) {
-    e.target.style.backgroundColor = 'white';
-  } else if (isRainbowActive) {
-    e.target.style.backgroundColor = rainbowColor;
-  }
-}
-
-function pointerUpHandler() {
-  gridElems = document.querySelectorAll('.grid-elem');
-  gridElems.forEach((elem) => elem.removeEventListener('pointermove', pointerMoveHandler));
-  gridElems.forEach((elem) => elem.removeEventListener('pointerup', pointerUpHandler));
-  document.body.removeEventListener('pointerup', pointerUpHandler);
-}
-
-function clearElements() {
-  while (gridContainer.firstChild) {
-    gridContainer.removeChild(gridContainer.firstChild);
-  }
-}
-
-function clearElementsColor() {
-  gridElems = document.querySelectorAll('.grid-elem');
-  for (let elem of gridElems) {
-    elem.style.backgroundColor = 'white';
   }
 }
 
 function checkBorderState() {
-  gridElems = document.querySelectorAll('.grid-elem');
+  gridElems = document.querySelectorAll('.grid-element');
   if (checkButton.classList.contains('active')) {
     checkButton.classList.remove('active');
     for (let elem of gridElems) {
@@ -133,36 +137,6 @@ function checkBorderState() {
       elem.style.border = `none`;
     }
   }
-}
-
-function updateSizeValue(e) {
-  progressBar.style.width = `${(e.target.value / 64) * 100}%`;
-  sizeValue.innerHTML = `${e.target.value} x ${e.target.value}`;
-}
-
-function changeSize(e) {
-  clearElements();
-
-  gridContainer.style.gridTemplateColumns = `repeat(${e.target.value}, 1fr)`;
-  gridContainer.style.gridTemplateRows = `repeat(${e.target.value}, 1fr)`;
-
-  for (let i = 0; i < e.target.value ** 2; i++) {
-    let elem = document.createElement('div');
-    elem.className = 'grid-elem';
-    gridContainer.append(elem);
-  }
-
-  gridElems = document.querySelectorAll('.grid-elem');
-
-  if (activeTool.classList.contains('rainbow-tool')) {
-    gridElems.forEach((elem) => elem.addEventListener('pointerleave', rainbowMode));
-  }
-  if (checkButton.classList.contains('active')) {
-    for (let elem of gridElems) {
-      elem.style.border = `none`;
-    }
-  }
-  gridElems.forEach((elem) => elem.addEventListener('pointerdown', pointerDownHandler));
 }
 
 // Save modal
@@ -261,17 +235,7 @@ function saveGrid(img, format, filename) {
   }
 }
 
-sizeSlider.addEventListener('pointermove', updateSizeValue);
-sizeSlider.addEventListener('change', changeSize);
-colorTool.addEventListener('click', setActiveTool);
-rainbowTool.addEventListener('click', setActiveTool);
-eraserTool.addEventListener('click', setActiveTool);
-clearButton.addEventListener('click', clearElementsColor);
-colorInput.addEventListener('change', () => (activeColor = colorInput.value));
-checkButton.addEventListener('click', checkBorderState);
-gridSave.addEventListener('click', showModal);
-gridSave.addEventListener('click', makeScreenshot);
-saveFormat.addEventListener('change', selectFormat);
-fileName.addEventListener('change', selectFileName);
-downloadButton.addEventListener('click', checkParameters);
-overlay.addEventListener('click', hideModal);
+window.addEventListener('load', () => {
+  setupGrid(DEFAULT_SIZE);
+  activateTool(DEFAULT_TOOL);
+});

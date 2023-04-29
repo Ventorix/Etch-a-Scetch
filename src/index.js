@@ -53,11 +53,7 @@ function setActiveTool(e) {
 }
 
 function rainbowMode() {
-  rainbowColor =
-    '#' +
-    Math.floor(Math.random() * 16777215)
-      .toString(16)
-      .padStart(6, '0');
+  rainbowColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
 }
 
 window.addEventListener('load', () => {
@@ -123,7 +119,7 @@ function checkBorderState() {
   if (checkButton.classList.contains('active')) {
     checkButton.classList.remove('active');
     for (let elem of gridElems) {
-      elem.style.border = '1px rgb(156, 156, 156) solid';
+      elem.style.border = '1px solid lightgrey';
     }
   } else {
     checkButton.classList.add('active');
@@ -139,8 +135,8 @@ function updateSizeValue(e) {
 }
 
 function changeSize(e) {
-  console.log(e.target.value);
   clearElements();
+
   gridContainer.style.gridTemplateColumns = `repeat(${e.target.value}, 1fr)`;
   gridContainer.style.gridTemplateRows = `repeat(${e.target.value}, 1fr)`;
 
@@ -149,7 +145,12 @@ function changeSize(e) {
     elem.className = 'grid-elem';
     gridContainer.append(elem);
   }
+
   gridElems = document.querySelectorAll('.grid-elem');
+
+  if (activeTool.classList.contains('rainbow-tool')) {
+    gridElems.forEach((elem) => elem.addEventListener('pointerleave', rainbowMode));
+  }
   if (checkButton.classList.contains('active')) {
     for (let elem of gridElems) {
       elem.style.border = `none`;
@@ -157,6 +158,7 @@ function changeSize(e) {
   }
   gridElems.forEach((elem) => elem.addEventListener('pointerdown', pointerDownHandler));
 }
+
 function makeScreenshot() {
   html2canvas(gridContainer).then(function (canvas) {
     gridContainer.appendChild(canvas);

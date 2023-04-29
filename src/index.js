@@ -4,7 +4,7 @@ import html2canvas from 'html2canvas';
 
 const gridContainer = document.querySelector('.grid-container');
 const sizeSlider = document.querySelector('.range-slider');
-const sizeValue = document.querySelector('.size-value');
+const sizeValue = document.querySelector('.grid-size');
 const colorInput = document.querySelector('.color-input');
 const colorTool = document.querySelector('.color-tool');
 const rainbowTool = document.querySelector('.rainbow-tool');
@@ -204,7 +204,11 @@ function makeScreenshot() {
 }
 
 function stringValidation(str) {
-  if (/^(con|prn|aux|nul|com[0-9]|lpt[0-9])$|([<>:"\/\\|?*])|(\.|\s)$/gi.test(str)) {
+  if (
+    /^(?!\.)(?!com[0-9]$)(?!con$)(?!lpt[0-9]$)(?!nul$)(?!prn$)[^\|\*\?\\:<>/$"]*[^\.\|\*\?\\:<>/$"]+$/.test(
+      str,
+    )
+  ) {
     return true;
   } else {
     return false;
@@ -226,31 +230,12 @@ function checkParameters() {
   }
 }
 
-sizeSlider.addEventListener('mousemove', updateSizeValue);
-sizeSlider.addEventListener('change', changeSize);
-colorTool.addEventListener('click', setActiveTool);
-rainbowTool.addEventListener('click', setActiveTool);
-eraserTool.addEventListener('click', setActiveTool);
-clearButton.addEventListener('click', clearElementsColor);
-colorInput.addEventListener('change', () => (activeColor = colorInput.value));
-checkButton.addEventListener('click', checkBorderState);
-gridSave.addEventListener('click', showModal);
-gridSave.addEventListener('click', makeScreenshot);
-saveFormat.addEventListener('change', selectFormat);
-fileName.addEventListener('change', selectFileName);
-downloadButton.addEventListener('click', checkParameters);
-overlay.addEventListener('click', hideModal);
-
 function saveGrid(img, format, filename) {
   try {
     // Check if the format is supported
     const supportedFormats = ['png', 'jpg'];
     if (!supportedFormats.includes(format)) {
       throw new Error(`Unsupported format: ${format}`);
-    }
-    // Check if the filename is valid
-    if (stringValidation(!filename)) {
-      throw new Error(`This is an invalid filename: ${filename}`);
     }
     // Save the grid as an image or a file
     if (format === 'png' || format === 'jpg') {
@@ -275,3 +260,18 @@ function saveGrid(img, format, filename) {
     return false;
   }
 }
+
+sizeSlider.addEventListener('pointermove', updateSizeValue);
+sizeSlider.addEventListener('change', changeSize);
+colorTool.addEventListener('click', setActiveTool);
+rainbowTool.addEventListener('click', setActiveTool);
+eraserTool.addEventListener('click', setActiveTool);
+clearButton.addEventListener('click', clearElementsColor);
+colorInput.addEventListener('change', () => (activeColor = colorInput.value));
+checkButton.addEventListener('click', checkBorderState);
+gridSave.addEventListener('click', showModal);
+gridSave.addEventListener('click', makeScreenshot);
+saveFormat.addEventListener('change', selectFormat);
+fileName.addEventListener('change', selectFileName);
+downloadButton.addEventListener('click', checkParameters);
+overlay.addEventListener('click', hideModal);

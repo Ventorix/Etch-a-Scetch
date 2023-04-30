@@ -3,6 +3,10 @@
   text-decoration: none;
 }
 
+canvas {
+  display: none;
+}
+
 html {
   position: relative;
   min-height: 100%;
@@ -13,6 +17,11 @@ body {
   background-color: $main;
   color: $white;
   margin-bottom: 100px;
+}
+
+.active {
+  background-color: $darkBlue;
+  box-shadow: 0 0 20px 5px;
 }
 
 /* HEADER */
@@ -293,15 +302,6 @@ button {
     opacity: 1;
     z-index: 9;
   }
-}
-
-.active {
-  background-color: $darkBlue;
-  box-shadow: 0 0 20px 5px;
-}
-
-canvas {
-  display: none;
 }
 
 /* MEDIA QUERIES */

@@ -69,9 +69,9 @@ let gridElems;
 let savedImg;
 
 // Variable to track mouse down state
-let mouseDown = false;
-document.body.addEventListener('pointerdown', () => (mouseDown = true));
-document.body.addEventListener('pointerup', () => (mouseDown = false));
+let pointerDown = false;
+document.body.addEventListener('pointerdown', () => (pointerDown = true));
+document.body.addEventListener('pointerup', () => (pointerDown = false));
 
 // Function to activate the selected tool
 function activateTool(newTool) {
@@ -103,6 +103,10 @@ function setupGrid(size) {
     gridElement.addEventListener('pointerover', changeColor);
     gridElement.addEventListener('pointerdown', changeColor);
     gridContainer.appendChild(gridElement);
+
+    if (checkButton.classList.contains('active')) {
+      gridElement.style.border = `none`;
+    }
   }
 }
 
@@ -132,7 +136,7 @@ function changeSize(value) {
 
 // Function to change the color of a grid element
 function changeColor(e) {
-  if (e.type === 'pointerover' && !mouseDown) return;
+  if (e.type === 'pointerover' && !pointerDown) return;
   if (currentTool === 'rainbow') {
     e.target.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
   } else if (currentTool === 'color') {

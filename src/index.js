@@ -1,28 +1,36 @@
 import './index.html';
 import './index.scss';
+
+// Library for creating screenshots of items
 import html2canvas from 'html2canvas';
 
+// Default values for color, tool, and size
 const DEFAULT_COLOR = 'black';
 const DEFAULT_TOOL = 'color';
 const DEFAULT_SIZE = 16;
 
+// Variables to store the current color, tool, and size
 let currentColor = DEFAULT_COLOR;
 let currentTool = DEFAULT_TOOL;
 let currentSize = DEFAULT_SIZE;
 
+// Function to set the current color
 function setCurrentColor(newColor) {
   currentColor = newColor;
 }
 
+// Function to set the current tool
 function setCurrentTool(newTool) {
   activateTool(newTool);
   currentTool = newTool;
 }
 
+// Function to set the current size
 function setCurrentSize(newSize) {
   currentSize = newSize;
 }
 
+// Selecting DOM elements
 const gridContainer = document.querySelector('.grid-container');
 const sizeSlider = document.querySelector('.range-slider');
 const sizeValue = document.querySelector('.grid-size');
@@ -40,6 +48,7 @@ const saveFormat = document.querySelector('.modal-block__format');
 const fileName = document.querySelector('.modal-block__name');
 const downloadButton = document.querySelector('.modal-button');
 
+// Event listeners for various actions
 colorPicker.addEventListener('input', (e) => setCurrentColor(e.target.value));
 colorTool.addEventListener('click', () => setCurrentTool('color'));
 rainbowTool.addEventListener('click', () => setCurrentTool('rainbow'));
@@ -55,13 +64,16 @@ downloadButton.addEventListener('click', checkParameters);
 gridSave.addEventListener('click', showModal);
 overlay.addEventListener('click', hideModal);
 
+// Variables to store grid elements and saved image
 let gridElems;
 let savedImg;
 
+// Variable to track mouse down state
 let mouseDown = false;
 document.body.addEventListener('pointerdown', () => (mouseDown = true));
 document.body.addEventListener('pointerup', () => (mouseDown = false));
 
+// Function to activate the selected tool
 function activateTool(newTool) {
   if (currentTool === 'rainbow') {
     rainbowTool.classList.remove('active');
@@ -80,6 +92,7 @@ function activateTool(newTool) {
   }
 }
 
+// Function to set up the grid
 function setupGrid(size) {
   gridContainer.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
   gridContainer.style.gridTemplateRows = `repeat(${size}, 1fr)`;
@@ -93,26 +106,31 @@ function setupGrid(size) {
   }
 }
 
+// Function to reload the grid
 function reloadGrid() {
   clearGrid();
   setupGrid(currentSize);
 }
 
+// Function to clear the grid
 function clearGrid() {
   gridContainer.innerHTML = '';
 }
 
+// Function to update the size value
 function updateSizeValue(value) {
   sizeValue.innerHTML = `${value} x ${value}`;
   progressBar.style.width = `${(value / 64) * 100}%`;
 }
 
+// Function to change the size of the grid
 function changeSize(value) {
   setCurrentSize(value);
   updateSizeValue(value);
   reloadGrid();
 }
 
+// Function to change the color of a grid element
 function changeColor(e) {
   if (e.type === 'pointerover' && !mouseDown) return;
   if (currentTool === 'rainbow') {
@@ -124,6 +142,7 @@ function changeColor(e) {
   }
 }
 
+// Function to check the border state of the grid elements
 function checkBorderState() {
   gridElems = document.querySelectorAll('.grid-element');
   if (checkButton.classList.contains('active')) {
@@ -139,25 +158,28 @@ function checkBorderState() {
   }
 }
 
-// Save modal
-const showModal = () => {
+// Function to show save modal
+function showModal() {
   saveModal.classList.add('opened');
   overlay.classList.add('opened');
-};
+}
 
-const hideModal = () => {
+// Function to hide save modal
+function hideModal() {
   saveModal.classList.remove('opened');
   overlay.classList.remove('opened');
   saveFormat.value = 'png';
   fileName.value = '';
   gridContainer.removeChild(gridContainer.lastChild);
-};
+}
 
+// Function to store file format
 function selectFormat() {
   let format = saveFormat.value;
   return format;
 }
 
+// Function to store file name
 function selectFileName() {
   let filename = fileName.value;
   if (stringValidation(filename)) {
@@ -167,6 +189,7 @@ function selectFileName() {
   }
 }
 
+// Function for creating a screenshot of the grid
 function makeScreenshot() {
   html2canvas(gridContainer).then(function (canvas) {
     gridContainer.appendChild(canvas);
@@ -177,6 +200,7 @@ function makeScreenshot() {
   }, 100);
 }
 
+// Function for validation file name
 function stringValidation(str) {
   if (
     /^(?!\.)(?!com[0-9]$)(?!con$)(?!lpt[0-9]$)(?!nul$)(?!prn$)[^\|\*\?\\:<>/$"]*[^\.\|\*\?\\:<>/$"]+$/.test(
@@ -189,6 +213,7 @@ function stringValidation(str) {
   }
 }
 
+// Function for preparing file parameters
 function checkParameters() {
   let format = selectFormat();
   let filename = selectFileName();
@@ -204,6 +229,7 @@ function checkParameters() {
   }
 }
 
+// Function for dowload a custom grid image
 function saveGrid(img, format, filename) {
   try {
     // Check if the format is supported
@@ -211,14 +237,13 @@ function saveGrid(img, format, filename) {
     if (!supportedFormats.includes(format)) {
       throw new Error(`Unsupported format: ${format}`);
     }
-    // Save the grid as an image or a file
+
     if (format === 'png' || format === 'jpg') {
       // Save as an image
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       canvas.width = img.width;
       canvas.height = img.height;
-      console.log(img, format, filename);
       ctx.drawImage(img, 0, 0);
       const dataURL = canvas.toDataURL(`image/${format}`);
       const link = document.createElement('a');
@@ -235,6 +260,7 @@ function saveGrid(img, format, filename) {
   }
 }
 
+// Setup base parameters for app
 window.addEventListener('load', () => {
   setupGrid(DEFAULT_SIZE);
   activateTool(DEFAULT_TOOL);
